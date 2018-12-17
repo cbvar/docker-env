@@ -62,6 +62,8 @@ services:
     build: ./memcached
     ports:
       - "11211:11211"
+    environment:
+      - MEMCACHED_MEMORY_LIMIT=64
     networks:
       - docker_network-demo
     restart: always
