@@ -1,6 +1,21 @@
 version: '3'
 services:
 
+  nginx:
+    build: ./nginx
+    networks:
+      - docker_network-demo
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ../:/myapp:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./var/logs/nginx:/var/log/nginx
+      - ./nginx/certs/:/etc/nginx/certs
+    restart: always
+
   php-fpm:
     build: ./php/
     networks:
@@ -8,31 +23,14 @@ services:
     ports:
       - "9000:9000"
     volumes:
-      - ../:/data/www:rw
-      - ./php/php.ini:/usr/local/etc/php/php.ini:ro
-      - ./php/php-fpm.conf:/usr/local/etc/php-fpm.conf:ro
+      - ../:/myapp:rw
+      - ./php/etc/php/php.ini:/usr/local/etc/php/php.ini:ro
+      - ./php/etc/php-fpm.conf:/usr/local/etc/php-fpm.conf:ro
+      - ./php/etc/php-fpm.d/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
       - ./var/logs/php-fpm:/var/log/php-fpm:rw
       - ./var/logs/phalcon:/var/tmp:rw
     restart: always
-    command: php-fpm
-
-  nginx:
-    build: ./nginx
-    depends_on:
-      - php-fpm
-    networks:
-      - docker_network-demo
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ../:/data/www:ro
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./var/logs/nginx:/var/log/nginx
-      - ./nginx/certs/:/etc/nginx/certs
-    restart: always
-    command: nginx -g 'daemon off;'
+    command: ["php-fpm", "-y", "/usr/local/etc/php-fpm.conf"] 
 
   mysql:
     build: ./mysql
